@@ -15,65 +15,81 @@
      e decidere le relazione di parantela (chi estende chi);
     per ogni classe definire eventuale classe padre, variabili di istanza, costruttore, proprieta' e toString;
     instanziando le varie classi provare a stampare cercando di ottenere un log sensato -->
+    <!-- step 2 -->
+      <!-- GOAL: sulla base dell'esercizio di ieri (vedi correzione qui su slack) aggiungere i seguenti vincoli di integrita':
+      - nomi e cognomi devono essere di >3 caratteri
+      - i livelli di sicurezza devono essere [1;5] per i dipendenti e [6;10] per i boss
+      - ral employee [10.000;100.000]
+      - non puo' esistere boss senza dipendenti
+      Durante la fase di test, utilizzare il costrutto try-catch per gestire l'errore e informare l'utente -->
     <?php
 
 
           class Person{
               private $name;
               private $lastname;
-              private $gender;
 
-              public function __construct($name, $lastname, $gender) {
+              public function __construct($name, $lastname) {
                           $this -> setName($name);
                           $this -> setLastname($lastname);
-                          $this -> setGender($gender);
               }
 
                public function getName() {
                    return $this -> name;
                }
                public function setName($name) {
+                   if (strlen($name) < 3) {
+                        $d =  new checkName('caratteri più di 3');
+                       throw $d;
+                   }
+
                    $this -> name = $name;
                }
                public function getLastname() {
                    return $this -> lastname;
                }
                public function setLastname($lastname) {
-                   $this -> lastname = $lastname;
+                 if (strlen($lastname) < 3) {
+                      $d = new checkLastName('caratteri più di 3');
+                      throw $d;
+                 }
+                 $this -> lastname = $lastname;
                }
-               public function getGender() {
-                   return $this -> gender;
-               }
-               public function setGender($gender) {
-                   $this -> gender = $gender;
-               }
+
                public function __toString() {
                    return
                        'name: ' . $this -> getName() . '<br>'
-                       . 'lastname: ' . $this -> getLastname() . '<br>'
-                       . 'gender: ' . $this -> getGender();
+                       . 'lastname: ' . $this -> getLastname();
 
                }
 
           }
 
           class Employee extends Person {
-               private $salary;
+               private $ral;
                private $contract;
                private $benefit;
-               public function __construct($name, $lastname, $gender, $salary,
-                                           $contract, $benefit) {
-                   parent::__construct($name, $lastname, $gender);
-                   $this -> setSalary($salary);
+               private $securyLvl;
+
+               public function __construct($name, $lastname,  $ral,
+                                           $contract, $benefit, $securyLvl) {
+                   parent::__construct($name, $lastname, $securyLvl);
+                   $this -> setRal($ral);
                    $this -> setContract($contract);
                    $this -> setBenefit($benefit);
+                   $this -> setSecuryLvl($securyLvl);
                }
 
-               public function getSalary() {
-                   return $this -> salary;
+               public function getRal() {
+                   return $this -> ral;
                }
-               public function setSalary($salary) {
-                   $this -> salary = $salary;
+               public function setRal($ral) {
+                   if ($ral < 10000 || $ral > 100000) {
+                      $d = new checkRal ('deve essere compreso tra 10000 e 100000');
+                      throw $d;
+                   }
+
+                   $this -> ral = $ral;
                }
                public function getContract() {
                    return $this -> contract;
@@ -87,25 +103,41 @@
                public function setBenefit($benefit) {
                    $this -> benefit = $benefit;
                }
+               public function getSecuryLvl() {
+                   return $this -> securyLvl;
+               }
+               public function setSecuryLvl($securyLvl) {
+                 if ($securyLvl < 1 || $securyLvl > 5) {
+                  $d = new checkSecuryLvl('il valore deve essere compreso tra 1 e 5');
+                  throw $d;
+                }
+                $this -> securyLvl = $securyLvl;
+               }
                public function __toString() {
                    return parent::__toString() . '<br>'
-                       . 'salary: ' . $this -> getSalary() . '<br>'
+                       . 'ral: ' . $this -> getRal() . '<br>'
                        . 'contract: ' . $this -> getContract(). '<br>'
-                       . 'benefit: ' . $this -> getBenefit();
+                       . 'benefit: ' . $this -> getBenefit() . '<br>'
+                       . 'securyLvl: ' . $this -> getSecuryLvl();
                }
+
+
 
           }
 
-          class Boss extends Person {
+          class Boss extends Employee {
                private $profit;
                private $investment;
-               private $slogan;
-               public function __construct($name, $lastname, $gender, $profit,
-                                           $investment, $slogan) {
-                   parent::__construct($name, $lastname, $gender);
+               private $employees;
+
+
+               public function __construct($name, $lastname,
+                                           $ral, $contract, $benefit,$securyLvl,
+                                           $profit,$investment, $employees = []) {
+                   parent::__construct($name, $lastname,  $ral, $contract, $benefit, $securyLvl);
                    $this -> setProfit($profit);
                    $this -> setInvestment($investment);
-                   $this -> setSlogan($slogan);
+                   $this -> setEmployees($employees);
                }
 
                public function getProfit() {
@@ -120,29 +152,101 @@
                public function setInvestment($investment) {
                    $this -> investment = $investment;
                }
-               public function getSlogan() {
-                   return $this -> slogan;
+               public function getEmployees() {
+                   return $this -> $employees;
                }
-               public function setSlogan($slogan) {
-                   $this -> slogan = $slogan;
+               public function setEmployees($employees) {
+
+                  if ($employees === [] || !is_array($employees)) {
+                    $d = new noEmployees('non può essere vuoto');
+                    throw $d;
+                  }
+                   $this -> employees = $employees;
                }
 
+
+               public function setSecuryLvl($securyLvl) {
+          				if ($securyLvl < 6 || $securyLvl > 10) {
+          					$f = new checkSecuryLvl('il valore deve essere compreso tra 6 e 10');
+          					throw $f;
+          				}
+          				$this -> securyLvl = $securyLvl;
+          		 }
+               public function getEmployeesStr(){
+                    $str = "";
+                    for ($i=0; $i < count($this -> getEmployees()) ; $i++) {
+                      $em = $this -> getEmployees()[$i];
+                      $fullname = $em -> getName() . ' ' . $em -> getLastname();
+                      $str .= ($i + 1) . ": " .  $fullname . "<br>" ;
+                    }
+                    return $str;
+               }
                public function __toString() {
+                 return parent::__toString().'<br>'
+                     . 'profit: ' . $this -> getProfit() . '<br>'
+                     . 'investment: ' . $this -> getInvestment(). '<br>'
+                     . 'employees: ' . $this -> getEmployeesStr();
 
-                   return parent::__toString() . '<br>'
-                       . 'profit: ' . $this -> getProfit() . '<br>'
-                       . 'investment: ' . $this -> getInvestment(). '<br>'
-                       . 'material: ' . $this -> getSlogan();
                }
-
           }
 
-          $person = new Person('Silvano','Rogi','M');
-          $employee = new Employee('Paolo', 'Bitta', 'M', 'Infinito', 'Uomo chiamato contratto', 'Alfa');
-          $boss = new Boss('Augusto', 'De Marinis', 'M', 'Pochi causa dipendenti!! ', 'Fusione', 'lei è un cretino...');
-          echo '<h1>Person</h1><br>' . $person . '<br><br>'
-               . '<h1>Employee</h1><br>' . $employee . '<br><br>'
-               . '<h1>Boss</h1><br>' . $boss;
+          class checkName extends Exception {}
+      		class checkLastName extends Exception {}
+      		class checkRal extends Exception {}
+      		class checkSecuryLvl extends Exception {}
+      		class noEmployees extends Exception {}
+
+            try {//person
+        			echo 'Person: <br>';
+        			$person1 = new Person('Porto','fiore');
+        			echo $person1;
+        		} catch (checkName $d) {
+        			echo 'Error: Name is not valid!<br>';
+        		} catch (checkLastName $d) {
+        			echo 'Error: Lastname is not valid!<br>';
+        		} finally {
+        			echo '<br><br>';
+        		}
+
+            try {//employee
+        			echo 'Employee: <br>';
+        			$employee1 = new Employee('Dario','Rossi',25000,'ind','alfa',4);
+        			echo $employee1;
+        		} catch (checkName $d) {
+        			echo 'Error: ' . $d -> getMessage();
+        		} catch (checkLastName $d) {
+        			echo 'Error: ' . $d -> getMessage();
+        		} catch (checkRal $d) {
+        			echo 'Error: ' . $d -> getMessage();
+        		} catch (checkSecuryLvl $d) {
+        			echo 'Error: ' . $d -> getMessage();
+        		} finally {
+        			echo '<br><br>';
+        		}
+
+            try {//boss array non lo vedo e il livello di sicurezza neanche !!!
+        			echo 'Boss: <br>';
+        			$boss = new Boss('Mario','Rossi',70000,'infinito','aereo', 7 ,1000000,200000,[$employee1]);
+        			echo $boss;
+            } catch (checkName $d) {
+        			echo 'Error: ' . $d -> getMessage();
+        		} catch (checkLastName $d) {
+        			echo 'Error: ' . $d -> getMessage();
+        		} catch (checkRal $d) {
+        			echo 'Error: ' . $d -> getMessage();
+        		} catch (checkSecuryLvl $f) {
+        			echo 'Error: ' . $f -> getMessage();
+        		} finally {
+        			echo '<br><br>';
+        		}
+
+
+
+
+
+
+
+
 
      ?>
 
